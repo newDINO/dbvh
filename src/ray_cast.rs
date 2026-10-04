@@ -73,10 +73,10 @@ impl<V: Vector, B: RayCast<Vector = V>, D> Bvh<B, D> {
 
         match &node.ty {
             NodeType::Leaf(data) => {
-                if let Some((t, r)) = leaf_ray_cast_f(origin, dir, data) {
-                    if t < result_compare {
-                        *result = Some((t, r));
-                    }
+                if let Some((t, r)) = leaf_ray_cast_f(origin, dir, data)
+                    && t < result_compare
+                {
+                    *result = Some((t, r));
                 }
             }
             NodeType::Internal { child1, child2 } => {

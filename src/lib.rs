@@ -320,7 +320,7 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
             let aabb1 = &self.nodes.get(child1.0).unwrap().bounding_volume;
             let aabb2 = &self.nodes.get(child2.0).unwrap().bounding_volume;
 
-            self.nodes.get_mut(index.0).unwrap().bounding_volume = aabb1.union(&aabb2);
+            self.nodes.get_mut(index.0).unwrap().bounding_volume = aabb1.union(aabb2);
 
             self.rotate_to_balance(index);
 
@@ -345,7 +345,7 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
         let mut area_base = root_node.bounding_volume.surface_area_heuristic();
         let mut direct_cost = root_node
             .bounding_volume
-            .union(&bounding_volume)
+            .union(bounding_volume)
             .surface_area_heuristic();
 
         loop {
@@ -375,7 +375,7 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
 
             let direct_cost1 = child1
                 .bounding_volume
-                .union(&bounding_volume)
+                .union(bounding_volume)
                 .surface_area_heuristic();
             let (area1, lower_cost1) = if leaf1 {
                 let cost1 = direct_cost1 + inherited_cost;
@@ -392,7 +392,7 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
 
             let direct_cost2 = child2
                 .bounding_volume
-                .union(&bounding_volume)
+                .union(bounding_volume)
                 .surface_area_heuristic();
             let (area2, lower_cost2) = if leaf2 {
                 let cost2 = direct_cost2 + inherited_cost;
