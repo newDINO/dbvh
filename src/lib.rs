@@ -217,6 +217,8 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
     //     &self.nodes
     // }
 
+    /// Update the bounding volume of the leaf at `index`
+    /// by removing the leaf first then insert it with the new bounding volume.
     pub fn update_leaf(&mut self, index: NodeIndex, bounding_volume: B) {
         let node = self.remove_leaf(index).unwrap();
         let NodeType::Leaf(user_data) = node.ty else {
@@ -225,6 +227,8 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
         self.insert_leaf_at(bounding_volume, user_data, index);
     }
 
+    /// Create a bvh leaf node with a bounding volume and user data.
+    /// Returns the index of the leaf node.
     pub fn insert_leaf(&mut self, bounding_volume: B, user_data: D) -> NodeIndex {
         if self.root_index == NodeIndex::NULL {
             core::hint::cold_path();
@@ -664,6 +668,12 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
         self.root_index
     }
 
+    /// Remove the leaf node at `index`.
+    ///
+    /// Returns the [`Node`] when successful.
+    ///
+    /// Panics if the node at `index` is not a leaf.
+    /// This is probably due to removing an already removed leaf where its slot is occupied by an internal node.
     pub fn remove_leaf(&mut self, index: NodeIndex) -> Option<Node<B, D>> {
         let node = self.nodes.get(index.0)?;
 
@@ -726,7 +736,7 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
     /// to total memory usage of the tree without changing the structure of the tree.
     ///
     /// `new_index_setter` will be called to pass the `(leaf_data: &mut D, new_node_index: NodeIndex)`
-    /// to modify any reference to the leaf to its new [NodeIndex].
+    /// to modify any reference to the leaf to its new [`NodeIndex`].
     pub fn compact(&mut self, mut new_index_setter: impl FnMut(&mut D, NodeIndex)) {
         if self.root_index == NodeIndex::NULL {
             return;
