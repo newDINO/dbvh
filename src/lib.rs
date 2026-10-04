@@ -1,6 +1,7 @@
 //! A dynamic bvh using generic [`BoundingVolume`] with zero dependencies.
 //!
 //! The algorithm is from `dynamic_tree.c` of [box2d](https://github.com/erincatto/box2d) (with some modifications).
+//! There is an excellent [GDC talk](https://box2d.org/files/ErinCatto_DynamicBVH_Full.pdf) about this.
 //!
 //! You may use it with whatever bounding volume you want: 3d AABB, 2d AABB, bounding sphere, etc.
 //! See user [`guide`] for how to use this crate with a specific bounding volume implementation.
@@ -9,6 +10,13 @@
 //! Bvh intersection test is about 7 times faster than brute force search when there are 1K objects,
 //! and about 1000 times faster when there are 1M objects.
 //! Bvh ray cast is about 10 times faster than brute force method with 1000 objects.
+//!
+//! Dynamic bvh supports removing and reinserting leaves, while still maitaining a balanced tree for fast spatial queries.
+//! This allows objects to move around by updating the bounding volume of their corresponding leaves.
+//! It is recommended to use [`EnlargedBvh`] for dynamic bvh to keep dynamic objects from being reinserted every tick.
+//! It uses a slightly larger bounding volume
+//! so that as long as the object doesn't move out of this enlarged bounding volume,
+//! its corresponding leaf is not reinserted.
 //!
 //! A simple example:
 //! ```
