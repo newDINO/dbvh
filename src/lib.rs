@@ -718,4 +718,77 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
         self.nodes.remove(parent_index.0);
         node
     }
+
+    /// When a large amount of leaves are removed from the [`Bvh`],
+    /// there will be a lot of empty slot left unused.
+    ///
+    /// This method can then be used to compact the [`Bvh`] tree
+    /// to total memory usage of the tree without changing the structure of the tree.
+    ///
+    /// `new_index_setter` will be called to pass the `(leaf_data: &mut D, new_node_index: NodeIndex)`
+    /// to modify any reference to the leaf to its new [NodeIndex].
+    pub fn compact(&mut self, mut new_index_setter: impl FnMut(&mut D, NodeIndex)) {
+        if self.root_index == NodeIndex::NULL {
+            return;
+        }
+        let root_node = self.nodes.remove(self.root_index.0).unwrap();
+
+        let mut new_pool = SlotPool::new();
+        let new_root_index = new_pool.allocate_slot();
+        if new_pool.insert_at(root_node, new_root_index).is_err() {
+            unreachable!()
+        }
+        self.compact_rec(
+            &mut new_pool,
+            NodeIndex(new_root_index),
+            NodeIndex::NULL,
+            &mut new_index_setter,
+        );
+
+        self.root_index = NodeIndex(new_root_index);
+        self.nodes = new_pool;
+    }
+
+    /// `pool[new_index.0]` should already be filled with node data.
+    fn compact_rec(
+        &mut self,
+        pool: &mut SlotPool<Node<B, D>>,
+        new_index: NodeIndex,
+        new_parent_index: NodeIndex,
+        new_index_setter: &mut impl FnMut(&mut D, NodeIndex),
+    ) {
+        let node = &mut pool[new_index.0];
+        node.parent_index = new_parent_index;
+
+        match &mut node.ty {
+            NodeType::Internal { .. } => {
+                let (new_i1, new_i2) = (pool.allocate_slot(), pool.allocate_slot());
+
+                // Reborrow (node, child1, child2) as mut here because allocate_slot() borrows pool as mutable.
+                let node = &mut pool[new_index.0];
+                let (child1, child2) = node.ty.as_internal_mut();
+
+                let c1 = self.nodes.remove(child1.0).unwrap();
+                let c2 = self.nodes.remove(child2.0).unwrap();
+
+                *child1 = NodeIndex(new_i1);
+                *child2 = NodeIndex(new_i2);
+
+                if pool.insert_at(c1, new_i1).is_err() {
+                    unreachable!()
+                }
+                if pool.insert_at(c2, new_i2).is_err() {
+                    unreachable!()
+                }
+
+                self.compact_rec(pool, NodeIndex(new_i1), new_index, new_index_setter);
+                self.compact_rec(pool, NodeIndex(new_i2), new_index, new_index_setter);
+                // Put recursive call at the end for possible tail call optimization.
+            }
+            NodeType::Leaf(data) => {
+                new_index_setter(data, new_index);
+                return;
+            }
+        };
+    }
 }

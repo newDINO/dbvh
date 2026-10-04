@@ -41,4 +41,7 @@ impl<B: Enlarge + BoundingVolume, D> EnlargedBvh<B, D> {
                 .update_leaf(index, bounding_volume.enlarge(self.enlargement));
         }
     }
+    pub fn compact(&mut self, new_index_setter: impl FnMut(&mut D, NodeIndex)) {
+        self.bvh.compact(new_index_setter);
+    }
 }
