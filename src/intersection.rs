@@ -41,7 +41,14 @@ impl<B: IntersectSelf, D> Bvh<B, D> {
         }
     }
 
-    /// Performance compared to [`Self::query_intersection`] (tested using `cargo bench --bench query`):
+    /// Do intersecion test using explicit stack instead of recursion.
+    ///
+    /// The performance of this method very close to [`Self::query_intersection`].
+    /// The advantage is that using this does not need to worry about stack overflow.
+    /// However, it should be noted that during benchmark,
+    /// even 1M leaves does not cause stack overflow when using [`Self::query_intersection`].
+    ///
+    /// Detailed Performance compared to [`Self::query_intersection`] (tested using `cargo bench --bench query`):
     ///
     /// On Apple M4:
     /// - Basically the same when there are 1K leaves.
