@@ -804,7 +804,6 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
             }
             NodeType::Leaf(data) => {
                 new_index_setter(data, new_index);
-                return;
             }
         };
     }
