@@ -193,6 +193,7 @@ impl<B: BoundingVolume, D> Default for Bvh<B, D> {
 }
 
 impl<B, D> Bvh<B, D> {
+    /// Create an empty bounding volume hierarchy.
     pub fn new() -> Self {
         Self {
             root_index: NodeIndex::NULL,
@@ -733,10 +734,16 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
     /// there will be a lot of empty slot left unused.
     ///
     /// This method can then be used to compact the [`Bvh`] tree
-    /// to total memory usage of the tree without changing the structure of the tree.
+    /// to reduce the total memory usage of the tree without changing the structure of the tree
+    /// ([`NodeIndex`] will be changed, but the relationship between nodes remains the same).
     ///
-    /// `new_index_setter` will be called to pass the `(leaf_data: &mut D, new_node_index: NodeIndex)`
+    /// `new_index_setter` will be called to pass `(leaf_data: &mut D, new_node_index: NodeIndex)`
     /// to modify any reference to the leaf to its new [`NodeIndex`].
+    ///
+    /// Note that during the execution of this function,
+    /// a new pool of nodes is allocated to transfer the nodes from the old pool,
+    /// so peak memory usage may increase during the execution of this function
+    /// when both pools exist at the same time.
     pub fn compact(&mut self, mut new_index_setter: impl FnMut(&mut D, NodeIndex)) {
         if self.root_index == NodeIndex::NULL {
             return;

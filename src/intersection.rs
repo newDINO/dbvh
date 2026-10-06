@@ -8,6 +8,12 @@ pub trait IntersectSelf {
 }
 
 impl<B: IntersectSelf, D> Bvh<B, D> {
+    /// Do intersection test using the bvh.
+    ///
+    /// `q: B` is the bounding volume to query leaf nodes that intersect it.
+    ///
+    /// `f: impl FnMut(&D)` is called for all leaf nodes that intersect `q`.
+    /// The custom data stored in these leaves is passed to `f`.
     #[inline]
     pub fn query_intersection(&self, q: B, mut f: impl FnMut(&D)) {
         if self.root_index == NodeIndex::NULL {
