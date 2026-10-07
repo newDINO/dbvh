@@ -126,7 +126,7 @@ pub trait Vector {
 }
 
 #[derive(Clone, Copy, Debug)]
-enum NodeType<D> {
+pub enum NodeType<D> {
     Internal {
         child1: NodeIndex,
         child2: NodeIndex,
@@ -134,13 +134,13 @@ enum NodeType<D> {
     Leaf(D),
 }
 impl<D> NodeType<D> {
-    fn is_leaf(&self) -> bool {
+    pub fn is_leaf(&self) -> bool {
         match self {
             Self::Internal { .. } => false,
             Self::Leaf(_) => true,
         }
     }
-    fn is_internal(&self) -> bool {
+    pub fn is_internal(&self) -> bool {
         match self {
             Self::Internal { .. } => true,
             Self::Leaf(_) => false,
@@ -164,14 +164,22 @@ impl<D> NodeType<D> {
 pub struct NodeIndex(SlotPoolHandle);
 
 impl NodeIndex {
-    const NULL: Self = Self(SlotPoolHandle::NULL);
+    pub const NULL: Self = Self(SlotPoolHandle::NULL);
 }
 
+/// Node of the bvh tree.
 #[derive(Clone, Debug)]
 pub struct Node<B, D> {
-    ty: NodeType<D>,
-    parent_index: NodeIndex,
-    bounding_volume: B,
+    /// Type of the node, can be leaf or internal.
+    pub ty: NodeType<D>,
+
+    /// Index of the parent of the node.
+    ///
+    /// This will be [`NodeIndex::NULL`] if the [`Node`] is root.
+    pub parent_index: NodeIndex,
+
+    /// Bounding volume of the node.
+    pub bounding_volume: B,
 }
 
 /// A generic bounding volume hierarchy.
@@ -665,8 +673,26 @@ impl<B: BoundingVolume, D> Bvh<B, D> {
         }
     }
 
-    fn root_index(&self) -> NodeIndex {
+    /// Get the root node index.
+    pub fn root_index(&self) -> NodeIndex {
         self.root_index
+    }
+
+    /// Get node at `index`.
+    pub fn get_node(&self, index: NodeIndex) -> Option<&Node<B, D>> {
+        self.nodes.get(index.0)
+    }
+
+    /// Get a mutable reference of the user data of the leaf node at `index`.
+    /// Returns [`None`] if the node doesn't exist or the node is not a leaf.
+    ///
+    /// Useful for modifying the user data of a leaf.
+    pub fn get_user_data_mut(&mut self, index: NodeIndex) -> Option<&mut D> {
+        let node = self.nodes.get_mut(index.0)?;
+        match &mut node.ty {
+            NodeType::Leaf(data) => Some(data),
+            _ => None,
+        }
     }
 
     /// Remove the leaf node at `index`.
