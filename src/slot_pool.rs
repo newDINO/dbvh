@@ -26,17 +26,16 @@ mod handle {
         pub const NULL: Self = Self(u32::MAX);
 
         #[inline]
-        pub(super) fn from_usize(index: usize) -> Option<Self> {
-            let index = index as u32;
-            if index == u32::MAX {
+        pub(super) const fn from_usize(index: usize) -> Option<Self> {
+            if index >= u32::MAX as usize {
                 None
             } else {
-                Some(Self(index))
+                Some(Self(index as u32))
             }
         }
 
         #[inline]
-        pub(super) fn as_usize(&self) -> usize {
+        pub(super) const fn as_usize(&self) -> usize {
             self.0 as usize
         }
     }

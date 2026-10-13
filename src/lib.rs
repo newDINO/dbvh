@@ -82,6 +82,7 @@
 // SOFTWARE.
 
 mod enlarge;
+mod generational_pool;
 pub mod guide;
 mod intersection;
 mod ray_cast;
